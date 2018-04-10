@@ -324,7 +324,7 @@ if __name__ == '__main__':
     MR_Matrix_Multiplication_B.run()
     writeBackDimensions(A,n,m)
     writeBackDimensions(B,m,p)
-    writeBackDimensions("outC.list", n,p
+    writeBackDimensions("outC.list", n,p)
                         
     time1=time.time()
     time=time1-time0
