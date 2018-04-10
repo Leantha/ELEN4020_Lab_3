@@ -1,6 +1,9 @@
 import sys
 import os
 import re
+import time
+
+time0=time.time()
 
 from mrjob.job import MRJob
 from mrjob.job import MRStep
@@ -92,3 +95,6 @@ if __name__ == '__main__':
     writeBackDimensions(B,m,p)
     writeBackDimensions("outC.list", n,p)
     
+time1=time.time()
+time=time1-time0
+print(time)
