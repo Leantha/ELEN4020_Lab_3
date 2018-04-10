@@ -1,0 +1,152 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{authblk}
+
+\usepackage[left=2cm, right=2cm, top=2cm, bottom=2cm]{geometry}
+\title{\textbf{ELEN4020 Data Intesive Computing for Data Science\\Lab 3 Report}}
+\author{Leantha Naicker (788753), Fiona Rose Oloo (790305),\\Boitumelo Mantji (823869), Justine Wright (869211)}
+\affil{The University of Witwatersrand}
+\renewcommand\Affilfont{\itshape\small}
+\begin{document}
+\maketitle
+
+\section{Introduction}
+\noindent
+
+\section{Python3 MapReduce Framework: MrJob}
+\noindent Map Reduce is programming tool to solving big data problems by utilising a multitude of computers in parallel. The logic is, as the name suggests, divided into two parts; the Map part and the Reduce part.
+The algorithms A and B were written in Python 3 and use the Map Reduce framework MrJob.
+
+
+\section{Matrix Multiplication: Algorithm A}
+\noindent In Map, the code generates the data in a key-value format; where the key indicates the co-ordinates of a value in a 2D-Array or matrix in reference to (i,j).\\
+The data provided for each matrix is in the format below.
+\begin{tabular}{|c|c|c|}
+\hline  
+row & column & value\\  
+\hline 
+\end{tabular}
+\\
+\noindent The algorithm assumes multiplication of two matrices M[i,j,value] and N[j,k,value] which are found in files 'matrixA.txt' and 'matrixB.txt' respectively. The matrices are generated using a a function found in MatrixGen.py, which also checks matrix dimension compatibility. \\
+\noindent The method used to multiply these two matrices are to map, reduce and then map and reduce again. The map function will produce key value pairs whilst the reduce function uses the output of the function to perform the row-column calculations, after sorting the values into lists.\\
+\\
+\noindent Psuedo Code for the map function:\\
+\noindent \textbf{for} (each element of M) \textbf{do}\\
+\indent produce(key, value) pairs as (i,k), (M,j,m of ij) for k =1,...\\
+\noindent \textbf{for} (each element of N) \textbf{do}\\
+\indent produce (key, value) pairs as (i,k), (N, j, n of jk) for i =1, 2,...\\
+\noindent \textbf{return} set of key, value pairs\\
+\\
+Psuedo Code for the reduce function:\\
+\noindent \textbf{for} each key \textbf{do}\\
+\indent sort values into lists for values\_A and values\_B\\
+\indent multiply (m of ij) and (n of jk) for each value in the list\\
+\indent sum up (m of ij)*(n of jk)\\
+\noindent \textbf{return} (i,k), sideset{}{j=1}sum (m of ij)*(n of jk)
+
+
+\section{Matrix Multiplication: Algorithm B}
+\noindent Algorithm B, uses the Strassen algorithm to multiply two matrices. Additionally, a divide and conquer method was also used alongside the Strassen algorithm, which could in theory be threaded to have multiple Strassen algorithm's running in parallel on the chunks of memory. It also has two map-reduce steps.
+It is worth noting that the Strassen algorithm only works on square matrices with dimensions $2^n$. So, matrices which do not meet these requirements are padded with zeros\\\\
+Pseudo-code for Strassen algorithm:\\\\
+\textbf{RecursiveStrassen}(A,B)\\
+\textbf{in:} Matrix A and B\\
+\textbf{out:} Matrix C\\\\
+If n = 1 call matrix\_product(A,B)\\
+Else\\
+	\indent Sub-divide both matrices A and B into four\\
+	\indent$P_{1}$ $\leftarrow$ RecursiveStrassen($A_{11}, B_{12} - B_{22}$)\\
+	\indent$P_{2}$ $\leftarrow$ RecursiveStrassen($A_{11}+A_{12}, B_{22}$)\\
+	\indent$P_{3}$ $\leftarrow$ RecursiveStrassen($A_{21}+A_{22}, B_{11} $)\\
+	\indent$P_{4}$ $\leftarrow$ RecursiveStrassen($A_{22}, B_{21} - B_{11}$)\\
+	\indent$P_{5}$ $\leftarrow$ RecursiveStrassen($A_{11}+A_{22}, B_{11} + B_{22}$)\\
+	\indent$P_{6}$ $\leftarrow$ RecursiveStrassen($A_{12}-A_{22}, B_{21} + B_{22}$)\\
+	\indent$P_{7}$ $\leftarrow$ RecursiveStrassen($A_{11}-A_{21}, B_{11} + B_{12}$)\\
+	\indent$C_{11}$ $\leftarrow$$P_{5} +P_{4} - P_{2}+ P_{6}$\\
+	\indent$C_{12}$ $\leftarrow$$P_{1} +P_{2}$\\
+	\indent$C_{21}$ $\leftarrow$$P_{3} +P_{4}$\\
+	\indent$C_{22}$ $\leftarrow$$P_{1} +P_{5} - P_{3}- P_{7}$\\
+	\indent Combine $C_{11}...C_{22}$ to make C\\
+\indent	Return C\\
+End If\\\\
+Psuedo-code for Divide-and-Conquer algorithm:\\\\
+\textbf{multiply}(A,B)\\
+\textbf{in:} Matrix A and B\\
+\textbf{out:} Matrix C\\\\
+Sub-divide A into $A_{11},A_{12}, A_{21}, A_{22}$\\
+Sub-divide B into $B_{11},B_{12}, B_{21}, B_{22}$\\
+$C_{11}\leftarrow A_{11}\times B{11}$\\
+$C_{12}\leftarrow A_{11}\times B{12}$\\
+$C_{21}\leftarrow A_{21}\times B{11}$\\
+$C_{22}\leftarrow A_{21}\times B{12}$\\
+$T_{11}\leftarrow A_{12}\times B{21}$\\
+$T_{12}\leftarrow A_{12}\times B{22}$\\
+$T_{21}\leftarrow A_{22}\times B{21}$\\
+$T_{22}\leftarrow A_{22}\times B{22}$\\
+$C_11 \leftarrow C_{11}+T_{11}$\\
+$C_12 \leftarrow C_{11}+T_{11}$\\
+$C_21 \leftarrow C_{11}+T_{11}$\\
+$C_22 \leftarrow C_{11}+T_{11}$\\
+Output C\\\\
+Pseudo-code for mapperOne:\\\\
+\textbf{mapperOne}(\_,line)\\
+\textbf{in}: lines from the file\\
+\textbf{out}: (key, value)\\\\
+Sub-divide A into $A_{11},A_{12}, A_{21}, A_{22}$\\
+Sub-divide B into $B_{11},B_{12}, B_{21}, B_{22}$\\
+key  $\leftarrow$ the matrix multiplication needed for divide-and-conquer as a string\\
+value  $\leftarrow$ matrix, i, j, A[i][j] or B[i][j]\\
+yield (key, value)\\ \\ \\ 
+\\Pseudo-code for reducerOne:\\ \\
+\textbf{reducerOne}(key, values)\\
+\textbf{in}: lines from the file\\
+\textbf{out}: (key, value)\\\\
+$l\leftarrow max(m,n,p)$\\
+$l\leftarrow PowerOf2(l)/2$\\
+$C\leftarrow strassen(A,B,l)$\\ \\
+depending on the key\\
+$identity \leftarrow C_{11}, C_{12} ... or T_{22}$\\
+For a to length of C\\
+\indent For b to length of C[a]\\
+	\indent \indent $yield (identity[0], [(identity,C[a][b],a,b)])$\\
+	\indent End For\\ 
+End For\\
+\\Pseudo-code for second mapperTwo:\\ \\
+\textbf{mapperOne}(key,values)\\
+\textbf{in}: key, value\\
+\textbf{out}: key, value\\\\
+$l\leftarrow max(m,n,p)$\\
+$l\leftarrow PowerOf2(l)/2$\\
+For v in values\\
+\indent	if v[0] = "C11" or "T11"\\
+	\indent\indent  $i \leftarrow v[2]$\\
+	\indent\indent  $k \leftarrow v[3]$\\
+	\indent Else If  v[0] = "C12" or "T12" \\
+	\indent\indent  $i \leftarrow v[2]$\\
+    \indent\indent  $k \leftarrow v[3]+l$\\
+	\indent Else If  v[0] = "C21" or "T21"\\
+	\indent\indent  $i \leftarrow v[2]+l$\\
+	\indent\indent  $k \leftarrow v[3]$\\
+	\indent Else If v[0] = "C22" or "T22"\\
+	\indent\indent  $i \leftarrow v[2]+l$\\
+	\indent\indent  $k \leftarrow v[3]+l$\\
+End For\\
+yield (i,k), (v[1])\\
+\\Pseudo-code for reducerTwo:\\ \\ 
+\textbf{reducerTwo}(key,values)\\
+\textbf{in}: key values\\
+\textbf{out}: key, value\\\\
+$C[i][k] \leftarrow$ sum of the values \\
+	yield (i, k), C[i][k] \\
+	
+	
+\section{Performance}
+
+Between algorithm A and algorithm B, which were run using outA1.list and outB1.list as the matrices for multiplication, the run time for algorithm A was 27.63s and algorithm B was 18.94s. Clearly the the recursive Strassen algorithm performed better.Strassen's algorithm is specifically designed to compute matrix multiplication for larger matrices. 
+
+
+\end{document}
