@@ -5,9 +5,12 @@ import math
 from optparse import OptionParser
 from math import ceil, log
 import fileinput
+import time
 
 from mrjob.job import MRJob
-from mrjob.job import MRStep 
+from mrjob.job import MRStep
+
+time0=time.time()
 
 def getDimensions(fileName):
     with open(fileName, 'r+') as f: 
@@ -321,5 +324,10 @@ if __name__ == '__main__':
     MR_Matrix_Multiplication_B.run()
     writeBackDimensions(A,n,m)
     writeBackDimensions(B,m,p)
-    writeBackDimensions("outC.list", n,p)
+    writeBackDimensions("outC.list", n,p
+                        
+    time1=time.time()
+    time=time1-time0
+    print(time)
+
     
